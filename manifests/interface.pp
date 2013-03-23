@@ -38,6 +38,7 @@ define pppd::interface (
 
     # Collect variables:
     $templates = getvar("${module_name}::params::templates")
+    $configs   = getvar("${module_name}::params::configs")
 
     file { "/etc/sysconfig/network-scripts/ifcfg-${title}":
         ensure  => present,
@@ -45,5 +46,24 @@ define pppd::interface (
         owner   => 'root',
         group   => 'root',
         mode    => '0644',
+    }
+
+    # CHAP and PAP authentication info:
+    if $user and $provider and $password {
+
+        concat::fragment {
+
+            "${title}_chap_auth":
+                ensure  => present,
+                target  => $configs[0],
+                content => "${user} ${provider} ${password}\n",
+                order   => '50';
+
+            "${title}_pap_auth":
+                ensure  => present,
+                target  => $configs[1],
+                content => "${user} ${provider} ${password}\n",
+                order   => '50';
+        }
     }
 }
